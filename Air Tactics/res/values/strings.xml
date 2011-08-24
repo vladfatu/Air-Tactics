@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="hello">Hello World, Air!</string>
+    <string name="app_name">Air Tactics</string>
+    <string name="sound">sound</string>
+    <string name="quit">quit</string>
+    <string name="sw">Switch Mode</string>
+    <!-- BluetoothChat -->
+ 	<string name="send">Send</string> 
+ 	<string name="not_connected">You are not connected to a device</string> 
+ 	<string name="bt_not_enabled_leaving">Bluetooth was not enabled. Leaving Bluetooth Chat.</string> 
+ 	<string name="title_connecting">connecting...</string> 
+ 	<string name="title_connected_to">connected: </string> 
+ 	<string name="title_not_connected">not connected</string> 
+	<!-- DeviceListActivity -->
+	<string name="scanning">scanning for devices...</string> 
+ 	<string name="select_device">select a device to connect</string> 
+ 	<string name="none_paired">No devices have been paired</string> 
+ 	<string name="none_found">No devices found</string> 
+ 	<string name="title_paired_devices">Paired Devices</string> 
+ 	<string name="title_other_devices">Other Available Devices</string>
+  	<string name="button_scan">Scan for devices</string> 
+	<!-- Options Menu -->
+ 	<string name="secure_connect">Connect a device - Secure</string> <string name="insecure_connect">Connect a device - Insecure</string> <string name="discoverable">Make discoverable</string>
+ 	<string name="help_text">Welcome to Air Tactics!!! \n \n This is a battleships type game with airplanes instead of boats.  \n You will first be presented with a screen with your planes.  You have to arrange your planes so that your opponent won\'t guess their location. \n  You can move your planes by selecting them, and can rotate them by moving your second finger up or down the screen. \n \n When you are ready to start press the arrow button in the top right corner of the screen. Keep in mind that after you do that you will not be able to change your planes position. \n \n The arrow button will take you to your opponents screen. Here you can tap tiles(coordinates) to select and double tap to fire a missile at that coordinate. \n A red "x" means you missed, a black dot means you hit a planes body, and a red dot means you hit a planes head. \n \n Next your opponent will have to choose a coordinate and so on ... until one of you guesses the 3 heads. \n \n In the opponent\'s screen you can use the planes to make an idea of how the planes could be arranged. For this you have to press the "Switch" option in the menu. After you set your planes, you have to press "Switch" again.  </string>
+ 	<string name="help">Help</string>
+</resources>
