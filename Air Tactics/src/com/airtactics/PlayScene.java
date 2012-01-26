@@ -1,10 +1,6 @@
 package com.airtactics;
 
 
-import com.google.ads.AdRequest;
-import com.google.ads.AdSize;
-import com.google.ads.AdView;
-import com.scoreloop.client.android.ui.EntryScreenActivity;
 import airtactics.com.R;
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -14,23 +10,38 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
 import android.os.Bundle;
-import android.view.Display;
-import android.view.MotionEvent;
+import android.view.View;
+import android.view.View.OnClickListener;
 import android.view.Window;
 import android.view.WindowManager;
-import android.widget.FrameLayout;
+import android.widget.Button;
+import android.widget.ImageButton;
+import android.widget.LinearLayout;
+
+import com.google.ads.AdRequest;
+import com.google.ads.AdSize;
+import com.google.ads.AdView;
+import com.internet.XMPPService;
+import com.internet.ui.CreateUser;
+import com.internet.ui.GameRoom;
+import com.scoreloop.client.android.ui.EntryScreenActivity;
+import com.users.User;
 
 
-	public class PlayScene extends Activity{
+	public class PlayScene extends Activity implements OnClickListener{
 		
 		public static final int SINGLE_PLAYER = 1;
 		public static final int MULTI_PLAYER = 2;
+		public static final int INTERNET_MULTI_PLAYER = 3;
 		public static int GAME_TYPE;
 		AdView adView;
 		AlertDialog alert;
 		Boolean firstRun;
+		private LinearLayout linearLayout;
 		
-		Sprite background, singleButton,slButton, multiButton;
+		//Sprite background, singleButton,slButton, multiButton, internetMultiButton;
+		Button singleButton, multiButton, internetMultiButton;
+		ImageButton slButton;
 		int currentX, currentY, AI;
 		
 		@Override
@@ -46,7 +57,7 @@ import android.widget.FrameLayout;
 			else firstRun = false;
 			requestWindowFeature(Window.FEATURE_NO_TITLE); 
 	        updateFullscreenStatus(true);
-			ScreenDisplay.playPanel = new Panel(this);
+			/*ScreenDisplay.playPanel = new Panel(this);
 			adView = new AdView(this, AdSize.BANNER, "a14de914472599e"); 
 			FrameLayout layout = new FrameLayout(this);
 		    FrameLayout.LayoutParams gameParams = new FrameLayout.LayoutParams(FrameLayout.LayoutParams.FILL_PARENT,
@@ -62,16 +73,46 @@ import android.widget.FrameLayout;
 			ScreenDisplay.screenHeight = display.getHeight();
 			ScreenDisplay.setDensity();
 		    
-		    AdRequest request = new AdRequest();
-		    //request.addTestDevice("CF95DC53F383F9A836FD749F3EF439CD");
-		    //request.setTesting(true);
-		    adView.loadAd(request);
+		    
 		    
 			//setContentView(ScreenDisplay.playPanel);
 			
-			init();
+			init();*/
+	        
+	        adView = new AdView(this, AdSize.BANNER, "a14de914472599e"); 
+			/*FrameLayout layout = new FrameLayout(this);
+		    FrameLayout.LayoutParams gameParams = new FrameLayout.LayoutParams(FrameLayout.LayoutParams.FILL_PARENT,
+		            FrameLayout.LayoutParams.FILL_PARENT);
+		    FrameLayout.LayoutParams adsParams =new FrameLayout.LayoutParams(FrameLayout.LayoutParams.FILL_PARENT, 
+		            FrameLayout.LayoutParams.WRAP_CONTENT, android.view.Gravity.BOTTOM); 
+		    linearLayout = (LinearLayout) findViewById(R.id.play_scene_layout);
+		    layout.addView(linearLayout, gameParams);
+		    layout.addView(adView, adsParams); 
+		    setContentView(layout);*/
+	        setContentView(R.layout.play_scene);
+	        linearLayout = (LinearLayout) findViewById(R.id.add_layout);
+	        linearLayout.addView(adView);
+	        
+	        AdRequest request = new AdRequest();
+		    //request.addTestDevice("CF95DC53F383F9A836FD749F3EF439CD");
+		    //request.setTesting(true);
+		    adView.loadAd(request);
+	        
+	        singleButton = (Button) findViewById(R.id.singleButton);
+	        singleButton.setOnClickListener(this);
+	        
+	        multiButton = (Button) findViewById(R.id.multiButton);
+	        multiButton.setOnClickListener(this);
+	        
+	        internetMultiButton = (Button) findViewById(R.id.internetButton);
+	        internetMultiButton.setOnClickListener(this);
+	        
+	        slButton = (ImageButton) findViewById(R.id.slButton);
+	        slButton.setOnClickListener(this);
+	        
+	        
 		}
-		
+		/*
 		public void init()
 	    {
 			background = new Sprite(getResources(), R.drawable.background, ScreenDisplay.playPanel);
@@ -82,12 +123,15 @@ import android.widget.FrameLayout;
 			ScreenDisplay.playPanel.addSprite(singleButton);
 			multiButton = new Sprite(getResources(), R.drawable.multi_button, ScreenDisplay.playPanel);
 			multiButton.setPosition(160,300);
-			ScreenDisplay.playPanel.addSprite(multiButton);
+			ScreenDisplay.playPanel.addSprite(internetMultiButton);
+			internetMultiButton = new Sprite(getResources(), R.drawable.multi_button, ScreenDisplay.playPanel);
+			internetMultiButton.setPosition(160,360);
+			ScreenDisplay.playPanel.addSprite(internetMultiButton);
 			slButton = new Sprite(getResources(), R.drawable.sl_button, ScreenDisplay.playPanel);
-			slButton.setPosition(160,380);
+			slButton.setPosition(160,420);
 			ScreenDisplay.playPanel.addSprite(slButton);
 	    }
-		
+		*/
 		
 		
 		
@@ -109,6 +153,14 @@ import android.widget.FrameLayout;
 		    edit.putBoolean("firstRun", false);
 		    edit.commit();
 		 }
+		 
+		 public String getUsernamePref() {
+			    return mPrefs.getString("username", "");
+			 }
+		 
+		 public String getPasswordPref() {
+			    return mPrefs.getString("password", "");
+			 }
 		 
 		 SharedPreferences mPrefs;
 		 
@@ -183,6 +235,30 @@ import android.widget.FrameLayout;
 			intent.putExtra("AI", Integer.toString(AI));
 			startActivity(intent);
 		}
+		
+		private void internetScene()
+		{
+			GAME_TYPE = INTERNET_MULTI_PLAYER;
+			AirOpponent.firstTime = true;
+			AirOpponent.selectedI = -1;
+			AirOpponent.selectedJ = -1;
+			new User();
+			startService(new Intent(this, XMPPService.class));
+			Intent intent;
+			
+			if (getUsernamePref().length() != 0 && getPasswordPref().length() != 0)
+			{
+				
+				User.getInstance().setUser(getUsernamePref(), getPasswordPref());
+	    		intent = new Intent(getBaseContext(), GameRoom.class);
+			}
+			else
+			{
+				intent = new Intent(getBaseContext(), CreateUser.class);
+			}
+			startActivity(intent);
+		}
+		
 		private void scoreloopScreen()
 		{
 			startActivity(new Intent(getBaseContext(), EntryScreenActivity.class));
@@ -203,7 +279,7 @@ import android.widget.FrameLayout;
             alert = builder.create();
         	alert.show();
 		}
-		
+		/*
 		public boolean onTouchEvent(MotionEvent event) 
 		{
 	        int action = event.getAction();
@@ -227,6 +303,10 @@ import android.widget.FrameLayout;
 	        	{
 	        		multiScene();
 	        	}
+	        	else if (internetMultiButton.touched(currentX, currentY))
+	        	{
+	        		internetScene();
+	        	}
 	        	else if (slButton.touched(currentX, currentY))
 	        	{
 	        		scoreloopScreen();
@@ -240,7 +320,7 @@ import android.widget.FrameLayout;
 	        }
 			return true;
 	      }
-		
+		*/
 		private void updateFullscreenStatus(Boolean bUseFullscreen)
 		{   
 		   if(bUseFullscreen)
@@ -255,5 +335,29 @@ import android.widget.FrameLayout;
 		    }
 
 		    //m_contentView.requestLayout();
+		}
+
+		public void onClick(View v) {
+			// TODO Auto-generated method stub
+			switch (v.getId())
+			{
+			case R.id.singleButton:
+				if (firstRun) 
+        		{
+        			helpDialog();
+        			firstRun = false;
+        		}
+        		else singleScene();
+				break;
+			case R.id.multiButton:
+				multiScene();
+				break;
+			case R.id.internetButton:
+				internetScene();
+				break;
+			case R.id.slButton:
+				scoreloopScreen();
+			}
+			
 		}
 }

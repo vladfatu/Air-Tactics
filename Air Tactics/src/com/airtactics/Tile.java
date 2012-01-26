@@ -1,9 +1,9 @@
 package com.airtactics;
 
 public class Tile {
-	int value,i,j;
-	boolean hit,selected,visible;
-	Sprite s;
+	public int value,i,j;
+	public boolean hit,selected,visible;
+	public Sprite s;
 	Tile(int i1, int j1)
 	{
 		i=i1;j=j1;

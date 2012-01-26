@@ -3,24 +3,22 @@ package com.airtactics;
 
 
 import java.util.Set;
+import java.util.StringTokenizer;
+
 import airtactics.com.R;
-import android.view.Menu;
-import com.bluetooth.BluetoothChat;
-import com.google.ads.AdRequest;
-import com.google.ads.AdSize;
-import com.google.ads.AdView;
-import com.scoreloop.client.android.ui.OnScoreSubmitObserver;
-import com.scoreloop.client.android.ui.ScoreloopManagerSingleton;
-import com.scoreloop.client.android.ui.ShowResultOverlayActivity;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.bluetooth.BluetoothDevice;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.ActivityInfo;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
+import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.MotionEvent;
@@ -28,6 +26,15 @@ import android.view.Window;
 import android.view.WindowManager;
 import android.widget.FrameLayout;
 import android.widget.Toast;
+
+import com.google.ads.AdRequest;
+import com.google.ads.AdSize;
+import com.google.ads.AdView;
+import com.internet.InternetReceiver;
+import com.internet.XMPPService;
+import com.scoreloop.client.android.ui.OnScoreSubmitObserver;
+import com.scoreloop.client.android.ui.ScoreloopManagerSingleton;
+import com.scoreloop.client.android.ui.ShowResultOverlayActivity;
 
 public class AirOpponent extends Activity implements OnScoreSubmitObserver{
 	/** Called when the activity is first created. */
@@ -46,6 +53,69 @@ public class AirOpponent extends Activity implements OnScoreSubmitObserver{
 	AdView adView;
 	AlertDialog helpAlert;
 	public static Label scoreLabel;
+	
+	private BroadcastReceiver mInternetReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+        	    	
+        	String from, text;
+        	from = "";
+        	text = "";
+        	if (intent.getExtras() != null)
+        	{
+        		if (intent.hasExtra(XMPPService.SENDER))
+        		{
+        			from = intent.getStringExtra(XMPPService.SENDER);
+        		}
+        		if (intent.hasExtra(XMPPService.NEW_MESSAGE))
+        		{
+        			text = intent.getStringExtra(XMPPService.NEW_MESSAGE);
+        			StringTokenizer st = new StringTokenizer(text);
+                    String temp;
+                    int x=-1, y=-1;
+                    if (st.hasMoreElements())
+                    {
+                    	temp = st.nextToken();
+                    	if (temp.equals("/resp"))
+                    	{
+                    		if (st.hasMoreElements()) temp = st.nextToken();
+							setPoint(Air.pointToSend, Integer.parseInt(temp));
+                    	}
+                    	else if (temp.equals("/pos"))
+                    	{
+                    		if (st.hasMoreElements())
+                    		{
+                    			temp = st.nextToken();
+                    			x = Integer.parseInt(temp);
+                    		}
+                    		if (st.hasMoreElements())
+                    		{
+                    			temp = st.nextToken();
+                    			y = Integer.parseInt(temp);
+                    		}
+                    		if (x != -1 && y != -1) 
+                    		{
+                    			multiShoot(new Point(x , y));
+                    			Air.opponentsTurn = false;
+                    		}
+                    	}
+                    	else if (temp.equals("/start"))
+                    	{
+                    		Air.opponentAccepted = true;
+                    		Toast.makeText(AirOpponent.this, "The opponent has set his plane, you can start playing now!", Toast.LENGTH_LONG).show();
+                    	}
+                    	else if (temp.equals("/disconnect"))
+                    	{
+                    		Air.disconnected = true;
+                    		Air.gameOver = true;
+                    		finish();
+                    		Toast.makeText(AirOpponent.this, "The opponent has left the game!!!", Toast.LENGTH_LONG).show();
+                    	}
+                    }
+        		}
+        	} 
+        }
+    };
 	
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -163,6 +233,93 @@ public class AirOpponent extends Activity implements OnScoreSubmitObserver{
         	ScreenDisplay.inGamePanel2.addSprite(planes[i]);
         }
         //planes[0].rotate(90);
+    }
+    
+    public void multiShoot(Point p)
+    {
+    	int x = 0,y = 0;
+    	Air._score++;
+    	x = p.x;
+    	y = p.y;
+    	if (Air.tileMatrix[x][y].value == 0) 
+		{
+			Air.tileMatrix[x][y].s = new Sprite(getResources(), R.drawable.no_hit, ScreenDisplay.inGamePanel);
+			Air.tileMatrix[x][y].hit=false;
+			Air.tileMatrix[x][y].visible=true;
+			Air.tileMatrix[x][y].value=-1;  
+		} 
+		else if (Air.tileMatrix[x][y].value == 1)
+		{
+			Air.tileMatrix[x][y].s = new Sprite(getResources(), R.drawable.hit_body, ScreenDisplay.inGamePanel);
+			Air.tileMatrix[x][y].hit=true;
+			Air.tileMatrix[x][y].visible=true;
+		}
+		else if (Air.tileMatrix[x][y].value == 2)
+		{
+			Air.tileMatrix[x][y].s = new Sprite(getResources(), R.drawable.hit_head, ScreenDisplay.inGamePanel);
+			Air.tileMatrix[x][y].hit=true;
+			Air.tileMatrix[x][y].visible=true;
+			Air.planesCrashed++;
+			Toast.makeText(this, "One of your planes has crashed!!!", Toast.LENGTH_LONG).show();
+			//scoreLabel.setText("You " + planesCrashed + "-" + AirOpponent.planesCrashed + " Opp");
+			AirOpponent.scoreLabel.setText("You " + Air.planesCrashed + "-" + AirOpponent.planesCrashed + " Opp");
+			if (Air.planesCrashed >= 3) 
+			{
+				Air.planesCrashed = 0;
+				Air.gameOver = true; 
+				Air.gameWon = false;
+				finish();
+				//alertReceived();
+			}
+		}
+    	Air.tileMatrix[x][y].s.setPosition(25 + 30*x, 55 + 30*y);
+		ScreenDisplay.inGamePanel.addSprite(Air.tileMatrix[x][y].s);
+		XMPPService.getInstance().sendMessage(Opponent.internetName, "/resp " + Air.tileMatrix[x][y].value);
+    }
+    
+    public void setPoint(Point p, int val)
+    {
+    	int tempI, tempJ;
+    	tempI = p.x;
+    	tempJ = p.y;
+    	if (val == -1)
+		{
+			tileMatrix[tempI][tempJ].s.setImage(getResources(), R.drawable.no_hit);
+			tileMatrix[tempI][tempJ].hit=false;
+			tileMatrix[tempI][tempJ].visible=true;
+			tileMatrix[tempI][tempJ].value=-1;
+			//AirOpponent.opponentsTurn();
+		}
+		else if (val == 1)
+		{
+			tileMatrix[tempI][tempJ].s.setImage(getResources(), R.drawable.hit_body);
+			tileMatrix[tempI][tempJ].hit=true;
+			tileMatrix[tempI][tempJ].visible=true;
+			//opponentsTurn();
+		}
+		else if (val == 2)
+		{
+			tileMatrix[tempI][tempJ].s.setImage(getResources(), R.drawable.hit_head);
+			tileMatrix[tempI][tempJ].hit=true;
+			tileMatrix[tempI][tempJ].visible=true;
+			planesCrashed++;
+			scoreLabel.setText("You " + Air.planesCrashed + "-" + planesCrashed + " Opp");
+			//scoreLabel.setText("You " + planesCrashed + "-" + planesCrashed + " Opp");
+			if (planesCrashed >= 3) 
+			{
+				Air.gameOver = true;
+				Air.gameWon = true;
+				finish();
+				//AirOpponent.alertReceived();
+				//alertReceivedWon();
+			}
+			//else opponentsTurn();
+		}
+    	if (!Air.gameOver)
+    	{
+	    	tileMatrix[tempI][tempJ].s.setPosition(25 + 30*tempJ, 55 + 30*tempI);
+			ScreenDisplay.inGamePanel2.addSprite(AirOpponent.tileMatrix[tempI][tempJ].s);
+    	}
     }
     
     public void alertReceived()
@@ -466,7 +623,10 @@ public class AirOpponent extends Activity implements OnScoreSubmitObserver{
         					}
         				}
         		}
-        		else if (Air.opponentsTurn) Toast.makeText(getBaseContext(), "It's not your turn!", Toast.LENGTH_SHORT).show();
+        		else if (Air.opponentsTurn) 
+        			 Toast.makeText(getBaseContext(), "It's not your turn!", Toast.LENGTH_SHORT).show();
+        		else if (!Air.opponentsTurn && !Air.opponentAccepted) 
+        			Toast.makeText(getBaseContext(), "The opponent has not arranged his planes yet!", Toast.LENGTH_SHORT).show();
         		else if (tile.touched(currentX, currentY))
         		{		
         			int tempI, tempJ;
@@ -479,6 +639,14 @@ public class AirOpponent extends Activity implements OnScoreSubmitObserver{
         					Air.pointToSend.x = tempI;
         					Air.pointToSend.y = tempJ;
         					Air.sendMessage("/pos " + tempJ + " " + tempI);
+        					Air.opponentsTurn = true;
+        					
+        				}
+        				else if (PlayScene.GAME_TYPE == PlayScene.INTERNET_MULTI_PLAYER)
+        				{
+        					Air.pointToSend.x = tempI;
+        					Air.pointToSend.y = tempJ;
+        					XMPPService.getInstance().sendMessage(Opponent.internetName, "/pos " + tempJ + " " + tempI);
         					Air.opponentsTurn = true;
         					
         				}
@@ -652,12 +820,22 @@ public class AirOpponent extends Activity implements OnScoreSubmitObserver{
 	protected void onPause() {
 		super.onPause();
 		ScoreloopManagerSingleton.get().setOnScoreSubmitObserver(null);
+		if (PlayScene.GAME_TYPE == PlayScene.INTERNET_MULTI_PLAYER)
+		{
+			if (mInternetReceiver != null) unregisterReceiver(mInternetReceiver);
+		}
 	}
 
 	@Override
 	protected void onResume() {
 		super.onResume();
 		ScoreloopManagerSingleton.get().setOnScoreSubmitObserver(this);
+		if (PlayScene.GAME_TYPE == PlayScene.INTERNET_MULTI_PLAYER)
+		{
+			if (mInternetReceiver == null) mInternetReceiver = new InternetReceiver();
+	    	IntentFilter intentFilter = new IntentFilter("new");
+	    	registerReceiver(mInternetReceiver, intentFilter);
+		}
 	}
 	
 	@Override

@@ -3,29 +3,24 @@ package com.airtactics;
 
 import java.util.Set;
 import java.util.StringTokenizer;
+
 import airtactics.com.R;
-import android.view.Menu;
-import com.bluetooth.BluetoothChat;
-import com.bluetooth.BluetoothChatService;
-import com.bluetooth.DeviceListActivity;
-import com.google.ads.AdRequest;
-import com.google.ads.AdSize;
-import com.google.ads.AdView;
-import com.scoreloop.client.android.ui.OnScoreSubmitObserver;
-import com.scoreloop.client.android.ui.ScoreloopManagerSingleton;
-import com.scoreloop.client.android.ui.ShowResultOverlayActivity;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.ActivityInfo;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
+import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.MotionEvent;
@@ -33,6 +28,19 @@ import android.view.Window;
 import android.view.WindowManager;
 import android.widget.FrameLayout;
 import android.widget.Toast;
+
+import com.bluetooth.BluetoothChatService;
+import com.bluetooth.DeviceListActivity;
+import com.google.ads.AdRequest;
+import com.google.ads.AdSize;
+import com.google.ads.AdView;
+import com.internet.InternetReceiver;
+import com.internet.XMPPClient;
+import com.internet.XMPPService;
+import com.internet.ui.GameRoom;
+import com.scoreloop.client.android.ui.OnScoreSubmitObserver;
+import com.scoreloop.client.android.ui.ScoreloopManagerSingleton;
+import com.scoreloop.client.android.ui.ShowResultOverlayActivity;
 
 public class Air extends Activity implements OnScoreSubmitObserver{
 	/** Called when the activity is first created. */
@@ -55,7 +63,7 @@ public class Air extends Activity implements OnScoreSubmitObserver{
 	public static double _score;
 	public static Point pointToSend;
 	public static int planesCrashed;
-	public static Boolean gameOver, gameStarted, gameWon;
+	public static Boolean gameOver, gameStarted, gameWon, opponentAccepted, disconnected;
 	int touched,currentX,currentY,nrOfPlanes,planeRotationType[];
 	public static Tile tileMatrix[][];
 	public static Opponent op;
@@ -72,6 +80,70 @@ public class Air extends Activity implements OnScoreSubmitObserver{
 	AlertDialog helpAlert;
 	AdView adView;
 	Label scoreLabel;
+	
+	private BroadcastReceiver mInternetReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+        	    	
+        	String from, text;
+        	from = "";
+        	text = "";
+        	if (intent.getExtras() != null)
+        	{
+        		if (intent.hasExtra(XMPPService.SENDER))
+        		{
+        			from = intent.getStringExtra(XMPPService.SENDER);
+        		}
+        		if (intent.hasExtra(XMPPService.NEW_MESSAGE))
+        		{
+        			text = intent.getStringExtra(XMPPService.NEW_MESSAGE);
+        			StringTokenizer st = new StringTokenizer(text);
+                    String temp;
+                    int x=-1, y=-1;
+                    if (st.hasMoreElements())
+                    {
+                    	temp = st.nextToken();
+                    	if (temp.equals("/pos"))
+                    	{
+                    		if (st.hasMoreElements())
+                    		{
+                    			temp = st.nextToken();
+                    			x = Integer.parseInt(temp);
+                    		}
+                    		if (st.hasMoreElements())
+                    		{
+                    			temp = st.nextToken();
+                    			y = Integer.parseInt(temp);
+                    		}
+                    		if (x != -1 && y != -1) 
+                    		{
+                    			multiShoot(new Point(x , y));
+                    			opponentsTurn = false;
+                    		}
+                    	}
+                    	else if (temp.equals("/resp"))
+                    	{
+                    		if (st.hasMoreElements()) temp = st.nextToken();
+                    		setPoint(pointToSend, Integer.parseInt(temp));
+                    	}
+                    	else if (temp.equals("/start"))
+                    	{
+                    		opponentAccepted = true;
+                    		Toast.makeText(Air.this, "The opponent has set his plane, you can start playing now!", Toast.LENGTH_LONG).show();
+                    	}
+                    	else if (temp.equals("/disconnect"))
+                    	{
+                    		disconnected = true;
+                    		gameOver = true;
+                    		finish();
+                    		Toast.makeText(Air.this, "The opponent has left the game!!!", Toast.LENGTH_LONG).show();
+                    	}
+                    }
+        		}
+        	} 
+        }
+    };
+	
     @Override
     public void onCreate(Bundle savedInstanceState) {
     	savedInstanceState = null;
@@ -79,7 +151,11 @@ public class Air extends Activity implements OnScoreSubmitObserver{
         this.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         updateFullscreenStatus(true);
-        opponentsTurn = false;
+        opponentAccepted = true;
+        if (PlayScene.GAME_TYPE == PlayScene.SINGLE_PLAYER || opponentsTurn == null)
+        {
+        	opponentsTurn = false;
+        }
         if (PlayScene.GAME_TYPE == PlayScene.MULTI_PLAYER)
         {
 	        mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
@@ -112,7 +188,18 @@ public class Air extends Activity implements OnScoreSubmitObserver{
         String AI = getIntent().getStringExtra("AI");
         op = new Opponent (Integer.parseInt(AI));
         gameWon = false;
+        gameOver = false;
         init();
+        if (PlayScene.GAME_TYPE == PlayScene.INTERNET_MULTI_PLAYER)
+        {
+        	disconnected = false;
+        	if (!opponentsTurn) opponentAccepted = false;
+        	if (getIntent().getExtras() != null)
+        		if (getIntent().hasExtra(GameRoom.OPPONENT))
+        			Opponent.internetName = getIntent().getStringExtra(GameRoom.OPPONENT);
+        	pointToSend = new Point(0, 0);
+        	//startActivity(new Intent(getBaseContext(), XMPPClient.class));
+        }
         //if (bluetoothSupported) checkBluetooth();
     }
     
@@ -662,7 +749,9 @@ public class Air extends Activity implements OnScoreSubmitObserver{
     private void opponentScreen()
 	{
 		//startActivity(new Intent(getBaseContext(), AirOpponent.class));
-		startActivityForResult(new Intent(getBaseContext(), AirOpponent.class), 2);
+		if (PlayScene.GAME_TYPE == PlayScene.INTERNET_MULTI_PLAYER ) 
+			startActivity(new Intent(this, AirOpponent.class));
+		else startActivityForResult(new Intent(getBaseContext(), AirOpponent.class), 2);
 	}
     public void resetPlane(int i)
     {
@@ -747,6 +836,8 @@ public class Air extends Activity implements OnScoreSubmitObserver{
         	{
         		if (!gameStarted) 
         		{
+        			if (opponentsTurn && PlayScene.GAME_TYPE == PlayScene.INTERNET_MULTI_PLAYER) 
+        				XMPPService.getInstance().sendMessage(Opponent.internetName, "/start");
         			Toast.makeText(getBaseContext(), "The game has started! You will no longer be able to move you planes!", Toast.LENGTH_SHORT).show();
         			gameStarted = true;
         		}
@@ -935,7 +1026,14 @@ public class Air extends Activity implements OnScoreSubmitObserver{
 		}
     	tileMatrix[x][y].s.setPosition(25 + 30*x, 55 + 30*y);
 		ScreenDisplay.inGamePanel.addSprite(tileMatrix[x][y].s);
-    	sendMessage("/resp " + tileMatrix[x][y].value);
+		if (PlayScene.GAME_TYPE == PlayScene.MULTI_PLAYER)
+		{
+			sendMessage("/resp " + tileMatrix[x][y].value);
+		}
+		else if (PlayScene.GAME_TYPE == PlayScene.INTERNET_MULTI_PLAYER)
+		{
+			XMPPService.getInstance().sendMessage(Opponent.internetName, "/resp " + tileMatrix[x][y].value);
+		}
     }
     
     public void opponentsShoot()
@@ -999,22 +1097,44 @@ public class Air extends Activity implements OnScoreSubmitObserver{
 	protected void onPause() {
 		super.onPause();
 		ScoreloopManagerSingleton.get().setOnScoreSubmitObserver(null);
-		
+		if (PlayScene.GAME_TYPE == PlayScene.INTERNET_MULTI_PLAYER)
+		{
+			if (mInternetReceiver != null) unregisterReceiver(mInternetReceiver);
+		}
 	}
 
 	@Override
 	protected void onResume() {
 		super.onResume();
+		if (PlayScene.GAME_TYPE == PlayScene.INTERNET_MULTI_PLAYER)
+		{
+			if (gameOver)
+			{
+				alertReceivedWon();
+			}
+			if (mInternetReceiver == null) mInternetReceiver = new InternetReceiver();
+		    IntentFilter intentFilter = new IntentFilter("new");
+		    registerReceiver(mInternetReceiver, intentFilter);
+		    if (disconnected) finish();
+		}
 		scoreLabel.setText("You " + planesCrashed + "-" + AirOpponent.planesCrashed + " Opp");
+		
 		if (gameOver) 
 		{
 			if (gameWon) ScoreloopManagerSingleton.get().onGamePlayEnded(_score, null);
 			if (PlayScene.GAME_TYPE == PlayScene.MULTI_PLAYER) alertReceivedWon();
+			else if (PlayScene.GAME_TYPE == PlayScene.INTERNET_MULTI_PLAYER) 
+				if (gameWon)alertReceivedWon();
+				else alertReceived();
 			else finish();
 		}
 		else if (opponentsTurn) 
 		{
 			if (PlayScene.GAME_TYPE == PlayScene.MULTI_PLAYER)
+			{
+				//sendMessage("/pos " + pointToSend.x + pointToSend.y);
+			}
+			else if (PlayScene.GAME_TYPE == PlayScene.INTERNET_MULTI_PLAYER)
 			{
 				//sendMessage("/pos " + pointToSend.x + pointToSend.y);
 			}
@@ -1051,6 +1171,7 @@ public class Air extends Activity implements OnScoreSubmitObserver{
 		{
 			if (mChatService != null) mChatService.stop();
 		}
+		
 		System.gc();
 	}
 	

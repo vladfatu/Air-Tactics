@@ -12,7 +12,7 @@ public class Sprite {
 	Panel panel;
 	float left,top,width,height;
 	int rotation;
-	Sprite(Resources r, int id, Panel tempPanel)
+	public Sprite(Resources r, int id, Panel tempPanel)
 	{
 		image = BitmapFactory.decodeResource(r, id);
 		height = image.getHeight();

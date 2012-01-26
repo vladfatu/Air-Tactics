@@ -8,6 +8,7 @@ public class Opponent {
 	
 	private Random mRnd;
 	public static int tileMatrix[][], AI;
+	public static String internetName;
 	List<Plane> planes = new ArrayList<Plane>();
 	List<Plane> planes2 = new ArrayList<Plane>();
 	List<Plane> planes3 = new ArrayList<Plane>();
