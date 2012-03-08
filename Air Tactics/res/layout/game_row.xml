@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+	xmlns:android="http://schemas.android.com/apk/res/android"
+	android:layout_width="fill_parent"
+	android:layout_height="?android:attr/listPreferredItemHeight"
+	android:padding="1dip"
+>
+	<ImageView android:id="@+id/imageView1" android:layout_width="wrap_content" android:layout_height="wrap_content" android:paddingTop="10dip"></ImageView>
+	<TextView android:text="Apples" android:layout_width="0dip" android:gravity="left|center_vertical" android:textStyle="bold" android:layout_weight="1" android:layout_height="fill_parent" android:textSize="30dip" android:id="@+id/opponentName"></TextView>
+	<TextView android:id="@+id/DaysText" android:layout_width="0dip" android:gravity="right|center_vertical" android:textStyle="bold" android:layout_weight="1" android:layout_height="fill_parent" android:textSize="10dip"></TextView>
+	<ProgressBar android:id="@+id/progressBar1" android:layout_width="wrap_content" android:layout_height="wrap_content"></ProgressBar>
+</LinearLayout>
