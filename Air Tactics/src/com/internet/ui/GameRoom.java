@@ -140,6 +140,11 @@ public class GameRoom extends ListActivity implements OnClickListener{
 	    //request.setTesting(true);
 	    adView.loadAd(request);
 		
+	    if (!XMPPService.getInstance().isConnected())
+	    {
+	    	finish();
+	    }
+	    
 		XMPPService.getInstance().setMode(XMPPService.AVAILABLE);
 		waiting = false;
 		
@@ -267,29 +272,32 @@ public class GameRoom extends ListActivity implements OnClickListener{
     	
     	if (PlayScene.GAME_TYPE == PlayScene.INTERNET_MULTI_PLAYER)
 		{
-			if (XMPPService.getInstance() != null)
+			if (XMPPService.getInstance() != null && XMPPService.getInstance().isConnected())
 			{
 				if (Air.disconnected != null && Air.gameOver != null)
 				if (!Air.disconnected && !Air.gameOver) XMPPService.getInstance().sendMessage(Opponent.internetName, "/disconnect");
+			
+				games = new ArrayList<GameRow>();
+		        adapter = new GamesAdapter(this, R.layout.game_row, games);
+		        setListAdapter(adapter);
+		        
+		        viewGames = new Runnable(){
+		            public void run() {
+		                getGames();
+		            }
+		        };
+		    	Thread thread =  new Thread(null, viewGames, "MagentoBackground");
+		        thread.start();
+		        m_ProgressDialog = ProgressDialog.show(GameRoom.this,    
+		        		getResources().getString(R.string.please_wait),
+						getResources().getString(R.string.connecting), true);
+		    	if (mInternetReceiver == null) mInternetReceiver = new InternetReceiver();
+		    	IntentFilter intentFilter = new IntentFilter("new");
+		    	registerReceiver(mInternetReceiver, intentFilter);
+			
 			}
 		}
     	
-    	games = new ArrayList<GameRow>();
-        adapter = new GamesAdapter(this, R.layout.game_row, games);
-        setListAdapter(adapter);
-        
-        viewGames = new Runnable(){
-            public void run() {
-                getGames();
-            }
-        };
-    	Thread thread =  new Thread(null, viewGames, "MagentoBackground");
-        thread.start();
-        m_ProgressDialog = ProgressDialog.show(GameRoom.this,    
-        		"Please wait...", "Retrieving data ...", true);
-    	if (mInternetReceiver == null) mInternetReceiver = new InternetReceiver();
-    	IntentFilter intentFilter = new IntentFilter("new");
-    	registerReceiver(mInternetReceiver, intentFilter);
     }
 	
 	@Override

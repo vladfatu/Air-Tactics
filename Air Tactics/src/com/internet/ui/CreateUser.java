@@ -59,19 +59,26 @@ public class CreateUser extends Activity implements OnClickListener{
 	
 	private void createAccount() 
 	{
-		try
+		if (XMPPService.getInstance().isConnected())
 		{
-			XMPPService.getInstance().createAccount(editUsername.getText().toString(), editPassword.getText().toString());
-			//XMPPService.getInstance().login(editUsername.getText().toString(), editPassword.getText().toString());
-			setUsernamePref(editUsername.getText().toString());
-			setPasswordPref(editPassword.getText().toString());
-			User.getInstance().setUser(editUsername.getText().toString(), editPassword.getText().toString());
-			startActivity(new Intent(this, GameRoom.class));
-			finish();
+			try
+			{
+				XMPPService.getInstance().createAccount(editUsername.getText().toString(), editPassword.getText().toString());
+				//XMPPService.getInstance().login(editUsername.getText().toString(), editPassword.getText().toString());
+				setUsernamePref(editUsername.getText().toString());
+				setPasswordPref(editPassword.getText().toString());
+				User.getInstance().setUser(editUsername.getText().toString(), editPassword.getText().toString());
+				startActivity(new Intent(this, GameRoom.class));
+				finish();
+			}
+			catch(Exception e)
+			{
+				Toast.makeText(getApplicationContext(), "A player with that username already exists!", Toast.LENGTH_SHORT).show();
+			}
 		}
-		catch(Exception e)
+		else
 		{
-			Toast.makeText(getApplicationContext(), "A player with that username already exists!!!", Toast.LENGTH_SHORT).show();
+			Toast.makeText(getApplicationContext(), R.string.server_offline, Toast.LENGTH_SHORT).show();
 		}
 	}
 	
@@ -81,7 +88,7 @@ public class CreateUser extends Activity implements OnClickListener{
 		setUsernamePref(editUsername.getText().toString());
 		setPasswordPref(editPassword.getText().toString());
 		User.getInstance().setUser(editUsername.getText().toString(), editPassword.getText().toString());
-		startActivity(new Intent(this, XMPPClient.class));
+		startActivity(new Intent(this, GameRoom.class));
 		finish();
 	}
 	

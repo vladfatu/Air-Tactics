@@ -1,5 +1,7 @@
 package com.internet;
 
+import java.io.IOException;
+import java.nio.channels.InterruptibleChannel;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.util.ArrayList;
@@ -25,20 +27,11 @@ import org.jivesoftware.smack.packet.Presence;
 import org.jivesoftware.smack.util.StringUtils;
 import org.jivesoftware.smackx.muc.MultiUserChat;
 
-import airtactics.com.R;
 import android.app.Service;
 import android.content.Intent;
 import android.os.IBinder;
 import android.util.Log;
-import android.widget.Toast;
 
-import com.airtactics.Air;
-import com.airtactics.AirOpponent;
-import com.airtactics.Opponent;
-import com.airtactics.PlayScene;
-import com.airtactics.Point;
-import com.airtactics.ScreenDisplay;
-import com.airtactics.Sprite;
 import com.internet.ui.adapters.GameRow;
 import com.users.User;
 
@@ -53,6 +46,9 @@ public class XMPPService extends Service{
 	public static String PRESENCE = "presence";
 	public static String NEW_GAME = "new game";
 	public static String NO_GAME = "no game";
+	
+	public static String CONNECTION_SUCCESSFUL = "com.airtactics.CONNECTION_SUCCESSFUL";
+	public static String CONNECTION_FAILED = "com.airtactics.CONNECTION_FAILED";
 	
 	public static String MESSAGE_TYPE = "message_type";
 	public static String SENDER = "sender";
@@ -92,6 +88,24 @@ public class XMPPService extends Service{
     {
     	super.onCreate();
     	connect();
+    }
+    
+    public boolean isConnected()
+    {
+    	if (connection != null)
+    	{
+    		return connection.isConnected();
+    	}
+    	return false;
+    }
+    
+    public boolean isAuthenticated()
+    {
+    	if (isConnected())
+    	{
+    		return connection.isAuthenticated();
+    	}
+    	return false;
     }
     
     public void sendMessage(String to, String text) {
@@ -225,8 +239,10 @@ public class XMPPService extends Service{
 
         try {
             connection.connect();
+            sendBroadcast(new Intent(CONNECTION_SUCCESSFUL));
             Log.i("XMPPClient", "[SettingsDialog] Connected to " + connection.getHost());
         } catch (XMPPException ex) {
+        	sendBroadcast(new Intent(CONNECTION_FAILED));
             Log.e("XMPPClient", "[SettingsDialog] Failed to connect to " + connection.getHost());
             Log.e("XMPPClient", ex.toString());
             setConnection(null);
@@ -318,9 +334,12 @@ public class XMPPService extends Service{
 	
 	@Override
 	public void onDestroy() {
-		Presence presence = new Presence(Presence.Type.available);
-        connection.disconnect(presence);
-        instance = null;
+		if (connection != null)
+		{
+			Presence presence = new Presence(Presence.Type.available);
+        	connection.disconnect(presence);
+        	instance = null;
+		}
 		super.onDestroy();
 	}
 }

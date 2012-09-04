@@ -17,7 +17,7 @@
 		android:icon="@drawable/icon"
 		android:label="@string/app_name"
 		android:clearTaskOnLaunch="true"
-		android:name="com.airtactics.MainAPP" android:debuggable="false">
+		android:name="com.airtactics.MainAPP" android:debuggable="true">
 		<supports-screens
 			android:resizeable="true"
 			android:smallScreens="true"

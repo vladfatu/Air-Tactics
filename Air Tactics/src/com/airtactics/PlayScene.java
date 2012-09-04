@@ -4,11 +4,13 @@ package com.airtactics;
 import airtactics.com.R;
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -17,6 +19,7 @@ import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
+import android.widget.Toast;
 
 import com.google.ads.AdRequest;
 import com.google.ads.AdSize;
@@ -28,8 +31,10 @@ import com.scoreloop.client.android.ui.EntryScreenActivity;
 import com.users.User;
 
 
-	public class PlayScene extends Activity implements OnClickListener{
-		
+public class PlayScene extends Activity implements OnClickListener{
+	
+	ProgressDialog progressDialog;
+
 		public static final int SINGLE_PLAYER = 1;
 		public static final int MULTI_PLAYER = 2;
 		public static final int INTERNET_MULTI_PLAYER = 3;
@@ -134,8 +139,6 @@ import com.users.User;
 		*/
 		
 		
-		
-		
 		/**
 		 * get if this is the first run
 		 *
@@ -180,10 +183,11 @@ import com.users.User;
 		public void alertReceived()
 		{
 	    	
-	    	final CharSequence[] items = {"Beginner", "Advanced"};
+	    	final CharSequence[] items = {getResources().getString(R.string.good), 
+	    						getResources().getString(R.string.very_good)};
 
 	    	AlertDialog.Builder builder = new AlertDialog.Builder(this);
-	    	builder.setTitle("How good are you?");
+	    	builder.setTitle(getResources().getString(R.string.what_is_your_level));
 	    	builder.setItems(items, new DialogInterface.OnClickListener() {
 	    	    public void onClick(DialogInterface dialog, int item) {
 	    	        
@@ -243,20 +247,56 @@ import com.users.User;
 			AirOpponent.selectedI = -1;
 			AirOpponent.selectedJ = -1;
 			new User();
-			startService(new Intent(this, XMPPService.class));
-			Intent intent;
 			
-			if (getUsernamePref().length() != 0 && getPasswordPref().length() != 0)
-			{
-				
-				User.getInstance().setUser(getUsernamePref(), getPasswordPref());
-	    		intent = new Intent(getBaseContext(), GameRoom.class);
-			}
-			else
-			{
-				intent = new Intent(getBaseContext(), CreateUser.class);
-			}
-			startActivity(intent);
+			new AsyncTask<Void, Void, Void>() {
+
+				@Override
+				protected void onPreExecute() {
+					
+					progressDialog = ProgressDialog.show(PlayScene.this, 
+							getResources().getString(R.string.please_wait),
+							getResources().getString(R.string.connecting),
+							true);
+					super.onPreExecute();
+				}
+
+				@Override
+				protected void onPostExecute(Void result) {
+					
+					progressDialog.dismiss();
+					if (XMPPService.getInstance() != null && XMPPService.getInstance().isConnected())
+					{
+						Intent gameIntent;
+						
+						if (getUsernamePref().length() != 0 && getPasswordPref().length() != 0)
+						{
+							
+							User.getInstance().setUser(getUsernamePref(), getPasswordPref());
+							gameIntent = new Intent(getBaseContext(), GameRoom.class);
+						}
+						else
+						{
+							gameIntent = new Intent(getBaseContext(), CreateUser.class);
+						}
+						startActivity(gameIntent);
+					}
+					else
+					{
+						Toast.makeText(PlayScene.this, R.string.server_offline, Toast.LENGTH_SHORT).show();
+						stopService(new Intent(PlayScene.this, XMPPService.class));
+					}
+					
+					super.onPostExecute(result);
+				}
+
+				@Override
+				protected Void doInBackground(Void... params) {
+					startService(new Intent(PlayScene.this, XMPPService.class));
+					return null;
+				}
+			}.execute();
+			
+			
 		}
 		
 		private void scoreloopScreen()
