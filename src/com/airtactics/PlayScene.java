@@ -24,11 +24,6 @@ import android.widget.Toast;
 import com.google.ads.AdRequest;
 import com.google.ads.AdSize;
 import com.google.ads.AdView;
-import com.internet.XMPPService;
-import com.internet.ui.CreateUser;
-import com.internet.ui.GameRoom;
-import com.scoreloop.client.android.ui.EntryScreenActivity;
-import com.users.User;
 
 
 public class PlayScene extends Activity implements OnClickListener{
@@ -240,69 +235,69 @@ public class PlayScene extends Activity implements OnClickListener{
 			startActivity(intent);
 		}
 		
-		private void internetScene()
-		{
-			GAME_TYPE = INTERNET_MULTI_PLAYER;
-			AirOpponent.firstTime = true;
-			AirOpponent.selectedI = -1;
-			AirOpponent.selectedJ = -1;
-			new User();
-			
-			new AsyncTask<Void, Void, Void>() {
-
-				@Override
-				protected void onPreExecute() {
-					
-					progressDialog = ProgressDialog.show(PlayScene.this, 
-							getResources().getString(R.string.please_wait),
-							getResources().getString(R.string.connecting),
-							true);
-					super.onPreExecute();
-				}
-
-				@Override
-				protected void onPostExecute(Void result) {
-					
-					progressDialog.dismiss();
-					if (XMPPService.getInstance() != null && XMPPService.getInstance().isConnected())
-					{
-						Intent gameIntent;
-						
-						if (getUsernamePref().length() != 0 && getPasswordPref().length() != 0)
-						{
-							
-							User.getInstance().setUser(getUsernamePref(), getPasswordPref());
-							gameIntent = new Intent(getBaseContext(), GameRoom.class);
-						}
-						else
-						{
-							gameIntent = new Intent(getBaseContext(), CreateUser.class);
-						}
-						startActivity(gameIntent);
-					}
-					else
-					{
-						Toast.makeText(PlayScene.this, R.string.server_offline, Toast.LENGTH_SHORT).show();
-						stopService(new Intent(PlayScene.this, XMPPService.class));
-					}
-					
-					super.onPostExecute(result);
-				}
-
-				@Override
-				protected Void doInBackground(Void... params) {
-					startService(new Intent(PlayScene.this, XMPPService.class));
-					return null;
-				}
-			}.execute();
-			
-			
-		}
+//		private void internetScene()
+//		{
+//			GAME_TYPE = INTERNET_MULTI_PLAYER;
+//			AirOpponent.firstTime = true;
+//			AirOpponent.selectedI = -1;
+//			AirOpponent.selectedJ = -1;
+//			new User();
+//			
+//			new AsyncTask<Void, Void, Void>() {
+//
+//				@Override
+//				protected void onPreExecute() {
+//					
+//					progressDialog = ProgressDialog.show(PlayScene.this, 
+//							getResources().getString(R.string.please_wait),
+//							getResources().getString(R.string.connecting),
+//							true);
+//					super.onPreExecute();
+//				}
+//
+//				@Override
+//				protected void onPostExecute(Void result) {
+//					
+//					progressDialog.dismiss();
+//					if (XMPPService.getInstance() != null && XMPPService.getInstance().isConnected())
+//					{
+//						Intent gameIntent;
+//						
+//						if (getUsernamePref().length() != 0 && getPasswordPref().length() != 0)
+//						{
+//							
+//							User.getInstance().setUser(getUsernamePref(), getPasswordPref());
+//							gameIntent = new Intent(getBaseContext(), GameRoom.class);
+//						}
+//						else
+//						{
+//							gameIntent = new Intent(getBaseContext(), CreateUser.class);
+//						}
+//						startActivity(gameIntent);
+//					}
+//					else
+//					{
+//						Toast.makeText(PlayScene.this, R.string.server_offline, Toast.LENGTH_SHORT).show();
+//						stopService(new Intent(PlayScene.this, XMPPService.class));
+//					}
+//					
+//					super.onPostExecute(result);
+//				}
+//
+//				@Override
+//				protected Void doInBackground(Void... params) {
+//					startService(new Intent(PlayScene.this, XMPPService.class));
+//					return null;
+//				}
+//			}.execute();
+//			
+//			
+//		}
 		
-		private void scoreloopScreen()
-		{
-			startActivity(new Intent(getBaseContext(), EntryScreenActivity.class));
-		}
+//		private void scoreloopScreen()
+//		{
+//			startActivity(new Intent(getBaseContext(), EntryScreenActivity.class));
+//		}
 		
 		public void helpDialog()
 		{      
@@ -393,10 +388,10 @@ public class PlayScene extends Activity implements OnClickListener{
 				multiScene();
 				break;
 			case R.id.internetButton:
-				internetScene();
+//				internetScene();
 				break;
 			case R.id.slButton:
-				scoreloopScreen();
+//				scoreloopScreen();
 			}
 			
 		}

@@ -30,13 +30,8 @@ import android.widget.Toast;
 import com.google.ads.AdRequest;
 import com.google.ads.AdSize;
 import com.google.ads.AdView;
-import com.internet.InternetReceiver;
-import com.internet.XMPPService;
-import com.scoreloop.client.android.ui.OnScoreSubmitObserver;
-import com.scoreloop.client.android.ui.ScoreloopManagerSingleton;
-import com.scoreloop.client.android.ui.ShowResultOverlayActivity;
 
-public class AirOpponent extends Activity implements OnScoreSubmitObserver{
+public class AirOpponent extends Activity {
 	/** Called when the activity is first created. */
 	//Panel myPanel;
 	private static final int SHOW_RESULT = 0;
@@ -63,56 +58,56 @@ public class AirOpponent extends Activity implements OnScoreSubmitObserver{
         	text = "";
         	if (intent.getExtras() != null)
         	{
-        		if (intent.hasExtra(XMPPService.SENDER))
-        		{
-        			from = intent.getStringExtra(XMPPService.SENDER);
-        		}
-        		if (intent.hasExtra(XMPPService.NEW_MESSAGE))
-        		{
-        			text = intent.getStringExtra(XMPPService.NEW_MESSAGE);
-        			StringTokenizer st = new StringTokenizer(text);
-                    String temp;
-                    int x=-1, y=-1;
-                    if (st.hasMoreElements())
-                    {
-                    	temp = st.nextToken();
-                    	if (temp.equals("/resp"))
-                    	{
-                    		if (st.hasMoreElements()) temp = st.nextToken();
-							setPoint(Air.pointToSend, Integer.parseInt(temp));
-                    	}
-                    	else if (temp.equals("/pos"))
-                    	{
-                    		if (st.hasMoreElements())
-                    		{
-                    			temp = st.nextToken();
-                    			x = Integer.parseInt(temp);
-                    		}
-                    		if (st.hasMoreElements())
-                    		{
-                    			temp = st.nextToken();
-                    			y = Integer.parseInt(temp);
-                    		}
-                    		if (x != -1 && y != -1) 
-                    		{
-                    			multiShoot(new Point(x , y));
-                    			Air.opponentsTurn = false;
-                    		}
-                    	}
-                    	else if (temp.equals("/start"))
-                    	{
-                    		Air.opponentAccepted = true;
-                    		Toast.makeText(AirOpponent.this, "The opponent has set his plane, you can start playing now!", Toast.LENGTH_LONG).show();
-                    	}
-                    	else if (temp.equals("/disconnect"))
-                    	{
-                    		Air.disconnected = true;
-                    		Air.gameOver = true;
-                    		finish();
-                    		Toast.makeText(AirOpponent.this, "The opponent has left the game!!!", Toast.LENGTH_LONG).show();
-                    	}
-                    }
-        		}
+//        		if (intent.hasExtra(XMPPService.SENDER))
+//        		{
+//        			from = intent.getStringExtra(XMPPService.SENDER);
+//        		}
+//        		if (intent.hasExtra(XMPPService.NEW_MESSAGE))
+//        		{
+//        			text = intent.getStringExtra(XMPPService.NEW_MESSAGE);
+//        			StringTokenizer st = new StringTokenizer(text);
+//                    String temp;
+//                    int x=-1, y=-1;
+//                    if (st.hasMoreElements())
+//                    {
+//                    	temp = st.nextToken();
+//                    	if (temp.equals("/resp"))
+//                    	{
+//                    		if (st.hasMoreElements()) temp = st.nextToken();
+//							setPoint(Air.pointToSend, Integer.parseInt(temp));
+//                    	}
+//                    	else if (temp.equals("/pos"))
+//                    	{
+//                    		if (st.hasMoreElements())
+//                    		{
+//                    			temp = st.nextToken();
+//                    			x = Integer.parseInt(temp);
+//                    		}
+//                    		if (st.hasMoreElements())
+//                    		{
+//                    			temp = st.nextToken();
+//                    			y = Integer.parseInt(temp);
+//                    		}
+//                    		if (x != -1 && y != -1) 
+//                    		{
+//                    			multiShoot(new Point(x , y));
+//                    			Air.opponentsTurn = false;
+//                    		}
+//                    	}
+//                    	else if (temp.equals("/start"))
+//                    	{
+//                    		Air.opponentAccepted = true;
+//                    		Toast.makeText(AirOpponent.this, "The opponent has set his plane, you can start playing now!", Toast.LENGTH_LONG).show();
+//                    	}
+//                    	else if (temp.equals("/disconnect"))
+//                    	{
+//                    		Air.disconnected = true;
+//                    		Air.gameOver = true;
+//                    		finish();
+//                    		Toast.makeText(AirOpponent.this, "The opponent has left the game!!!", Toast.LENGTH_LONG).show();
+//                    	}
+//                    }
+//        		}
         	} 
         }
     };
@@ -274,7 +269,7 @@ public class AirOpponent extends Activity implements OnScoreSubmitObserver{
 		}
     	Air.tileMatrix[x][y].s.setPosition(25 + 30*x, 55 + 30*y);
 		ScreenDisplay.inGamePanel.addSprite(Air.tileMatrix[x][y].s);
-		XMPPService.getInstance().sendMessage(Opponent.internetName, "/resp " + Air.tileMatrix[x][y].value);
+//		XMPPService.getInstance().sendMessage(Opponent.internetName, "/resp " + Air.tileMatrix[x][y].value);
     }
     
     public void setPoint(Point p, int val)
@@ -646,7 +641,7 @@ public class AirOpponent extends Activity implements OnScoreSubmitObserver{
         				{
         					Air.pointToSend.x = tempI;
         					Air.pointToSend.y = tempJ;
-        					XMPPService.getInstance().sendMessage(Opponent.internetName, "/pos " + tempJ + " " + tempI);
+//        					XMPPService.getInstance().sendMessage(Opponent.internetName, "/pos " + tempJ + " " + tempI);
         					Air.opponentsTurn = true;
         					
         				}
@@ -811,31 +806,31 @@ public class AirOpponent extends Activity implements OnScoreSubmitObserver{
     
     
     
-	public void onScoreSubmit(int status, Exception error) {
-		// TODO Auto-generated method stub
-		startActivityForResult(new Intent(this, ShowResultOverlayActivity.class), SHOW_RESULT);
-	}
+//	public void onScoreSubmit(int status, Exception error) {
+//		// TODO Auto-generated method stub
+//		startActivityForResult(new Intent(this, ShowResultOverlayActivity.class), SHOW_RESULT);
+//	}
 	
 	@Override
 	protected void onPause() {
 		super.onPause();
-		ScoreloopManagerSingleton.get().setOnScoreSubmitObserver(null);
-		if (PlayScene.GAME_TYPE == PlayScene.INTERNET_MULTI_PLAYER)
-		{
-			if (mInternetReceiver != null) unregisterReceiver(mInternetReceiver);
-		}
+//		ScoreloopManagerSingleton.get().setOnScoreSubmitObserver(null);
+//		if (PlayScene.GAME_TYPE == PlayScene.INTERNET_MULTI_PLAYER)
+//		{
+//			if (mInternetReceiver != null) unregisterReceiver(mInternetReceiver);
+//		}
 	}
 
 	@Override
 	protected void onResume() {
 		super.onResume();
-		ScoreloopManagerSingleton.get().setOnScoreSubmitObserver(this);
-		if (PlayScene.GAME_TYPE == PlayScene.INTERNET_MULTI_PLAYER)
-		{
-			if (mInternetReceiver == null) mInternetReceiver = new InternetReceiver();
-	    	IntentFilter intentFilter = new IntentFilter("new");
-	    	registerReceiver(mInternetReceiver, intentFilter);
-		}
+//		ScoreloopManagerSingleton.get().setOnScoreSubmitObserver(this);
+//		if (PlayScene.GAME_TYPE == PlayScene.INTERNET_MULTI_PLAYER)
+//		{
+//			if (mInternetReceiver == null) mInternetReceiver = new InternetReceiver();
+//	    	IntentFilter intentFilter = new IntentFilter("new");
+//	    	registerReceiver(mInternetReceiver, intentFilter);
+//		}
 	}
 	
 	@Override

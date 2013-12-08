@@ -3,10 +3,8 @@ package com.airtactics;
 
 import android.app.Application;
 
-import com.scoreloop.client.android.ui.OnCanStartGamePlayObserver;
-import com.scoreloop.client.android.ui.ScoreloopManagerSingleton;
 
-public class MainAPP extends Application implements OnCanStartGamePlayObserver {
+public class MainAPP extends Application {
 
 	static enum GamePlaySessionStatus {
 		CHALLENGE, NONE, NORMAL
@@ -45,9 +43,9 @@ public class MainAPP extends Application implements OnCanStartGamePlayObserver {
 	public void onCreate() {
 		super.onCreate();
  
-		ScoreloopManagerSingleton.init(this);
-		
-		ScoreloopManagerSingleton.get().setOnCanStartGamePlayObserver(this);
+//		ScoreloopManagerSingleton.init(this);
+//		
+//		ScoreloopManagerSingleton.get().setOnCanStartGamePlayObserver(this);
 
 		_gamePlaySessionStatus = GamePlaySessionStatus.NONE;
 		_gamePlaySessionMode = null;
