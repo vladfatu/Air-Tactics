@@ -58,6 +58,7 @@
 		android:id="@+id/add_layout"
 		android:gravity="bottom"
 		android:layout_gravity="bottom"
+		android:orientation="horizontal"
 		android:layout_weight="0.1"
 	></LinearLayout>
 </LinearLayout>
